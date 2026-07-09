@@ -1,8 +1,0 @@
-应用程序起始地址 0x08002800，大小为 54KB，预留 10KB 给 bootloader，总计 64KB
-define FLASH_BASE_ADDR 0x08000000
-define APP_START_ADDRESS 0x08002800  
-define APP_SIZE 0xD800        // 54KB
-
-适用stm32f103c8t6
-
-选择自动检测模式，可实现在Keil完成编译后生成新的bin文件时候，按复位键自动下载
