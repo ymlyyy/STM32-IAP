@@ -67,3 +67,22 @@ python bootloader_uploader.py
 - 分包大小：256 字节
 - 分包间隔：100ms
 - 默认波特率：115200
+
+## 踩坑记录：`__set_MSP()` 后的编译器栈操作
+
+使用 `__set_MSP(app_stack_prt)` 设置 App 的栈顶后，函数收尾时编译器会插入 `ldmia sp!, {r4,r5,r6,lr}`，这条指令从**新 SP**（App 的栈顶）读取 16 字节并 SP += 16。若 App 的 `_estack` 在 RAM 末尾（如 STM32F103C8T6 的 `0x20005000`），则越界读触发 BusFault。
+
+**修复**：用纯汇编函数实现跳转，`MSR msp, r0` 后直接 `BX r1`，中间没有任何栈操作：
+
+```c
+__asm void boot_jump(uint32_t sp, uint32_t pc) {
+    MSR msp, r0
+    BX r1
+}
+```
+
+**原因**：`__set_MSP()` 展开为 `msr MSP, rn`，但编译器不知道这条指令改变了栈指针，仍为外层函数生成标准的 `push`/`ldmia sp!` 收尾代码。修改 MSP 后，`sp!` 操作的是新栈而非旧栈。
+
+## 许可证
+
+Apache License 2.0

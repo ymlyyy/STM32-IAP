@@ -83,6 +83,11 @@ static void reset_bootloader_state(void) {
     memset(uart_receive_buff, 0, BOOTLOADER_UART_REC_BUFF_LEN);
 }
 
+__asm void boot_jump(uint32_t sp, uint32_t pc) {
+    MSR msp, r0
+    BX r1
+}
+
 void Int_bootloader_jump_to_app(void){
 	
 		typedef void (*pFunction)(void);
@@ -102,9 +107,11 @@ void Int_bootloader_jump_to_app(void){
 		
 		HAL_DeInit();
 		
-		__set_MSP(app_stack_prt);
+//		__set_MSP(app_stack_prt);
 		
 		SCB->VTOR = APP_START_ADDRESS;
+		// use boot_jump instead of __set_MSP to avoid BusFault
+		boot_jump(app_stack_prt, app_reset_handel);
 		
 		pFunction jump_to_app = (pFunction)app_reset_handel;
 		
