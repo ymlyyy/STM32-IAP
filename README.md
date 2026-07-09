@@ -1,61 +1,25 @@
-# STM32 IAP Bootloader 上位机
+# STM32 IAP Bootloader
 
-配套 STM32 IAP Bootloader 的固件升级工具，支持手动下载和自动检测模式。
+基于 STM32F103C8T6 的 IAP（In-Application Programming）Bootloader，支持串口固件升级。
 
 ## 功能特点
 
-- **手动模式**：选择 .bin 固件文件，点击"一键下载"完成升级
-- **自动模式**：监听串口，检测设备进入 boot 模式后自动升级
-- **实时日志**：显示完整的 TX/RX 通信数据
-- **进度显示**：传输进度条和百分比
-- **打包支持**：可打包成独立 EXE，无需 Python 环境
-
-## 界面截图
-
-![下载界面](下载1.png)
-![升级过程](下载2.png)
+- **串口升级**：通过 UART 接收固件并写入 Flash
+- **APP 跳转**：启动时自动检测并跳转到应用程序
+- **Flash 擦写**：支持按页擦除和写入
+- **配套上位机**：提供 Python GUI 工具进行固件下载
 
 ## 硬件要求
 
 - STM32F103C8T6 最小系统板
 - 串口连接（UART1）
-- 配套 bootloader 程序（已烧录）
 
-## 软件依赖
+## 内存布局
 
-- Python 3.6+
-- pyserial（串口通信）
-- tkinter（GUI，Python 自带）
-
-## 快速开始
-
-### 1. 安装依赖
-
-```bash
-pip install pyserial
-```
-
-### 2. 运行上位机
-
-```bash
-python bootloader_uploader.py
-```
-
-### 3. 使用步骤
-
-1. 选择串口和波特率（默认 115200）
-2. 点击"连接"
-3. 选择 .bin 固件文件
-4. 点击"一键下载"或启用"自动检测模式"
-
-## 自动检测模式
-
-启用后，上位机会持续监听串口：
-- 检测到设备进入 boot 模式（显示"倒计时"）自动开始升级
-- 升级完成后继续监听，支持重复升级
-- 适合开发测试：改代码 → 编译 → 按复位 → 自动下载
-
-
+| 区域 | 起始地址 | 大小 | 说明 |
+|------|---------|------|------|
+| Bootloader | 0x08000000 | 10KB | 引导程序 |
+| APP | 0x08002800 | 54KB | 应用程序 |
 
 ## 通信协议
 
@@ -70,15 +34,36 @@ python bootloader_uploader.py
 
 ```
 STM32/IAP/
-├── bootloader_uploader.py    # 上位机主程序
 ├── bootloader/               # Bootloader 源码（STM32 工程）
+│   ├── Core/                 # HAL 库和用户代码
+│   ├── Drivers/              # STM32 HAL 驱动
+│   ├── interface/            # Bootloader 接口层
+│   └── MDK-ARM/              # Keil 工程文件
 ├── app/                      # 示例应用程序（LED.bin）
-└── README.md                 # 本说明文件
+├── bootloader_uploader.py    # 配套上位机工具
+└── README.md
 ```
+
+## 配套上位机
+
+提供 Python GUI 工具用于固件升级，支持：
+- 手动模式：选择 .bin 文件，一键下载
+- 自动模式：监听串口，检测设备进入 boot 模式后自动升级
+
+运行方式：
+
+```bash
+pip install pyserial
+python bootloader_uploader.py
+```
+
+![下载界面](下载1.png)
+![升级过程](下载2.png)
 
 ## 技术参数
 
-- 最大固件大小：54KB（APP 区域 0x08002800 开始）
+- Bootloader 大小：10KB
+- 最大固件大小：54KB
 - 分包大小：256 字节
 - 分包间隔：20ms
 - 默认波特率：115200
@@ -86,7 +71,3 @@ STM32/IAP/
 ## 许可证
 
 Apache License 2.0
-
-## 相关项目
-
-- [STM32 IAP Bootloader](bootloader/) - 配套的 bootloader 程序
