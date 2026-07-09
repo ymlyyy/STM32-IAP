@@ -70,7 +70,7 @@ python bootloader_uploader.py
 
 ## 踩坑记录：`__set_MSP()` 后的编译器栈操作
 
-使用 `__set_MSP(app_stack_prt)` 设置 App 的栈顶后，函数收尾时编译器会插入 `ldmia sp!, {r4,r5,r6,lr}`，这条指令从**新 SP**（App 的栈顶）读取 16 字节并 SP += 16。若 App 的 `_estack` 在 RAM 末尾（如 STM32F103C8T6 的 `0x20005000`），则越界读触发 BusFault。
+使用 `__set_MSP(app_stack_prt)` 设置 App 的栈顶后，函数收尾时编译器会插入 `ldmia sp!, {r4,r5,r6,lr}`，这条指令从**新 SP**（App 的栈顶）读取 16 字节并 SP += 16。若 App 的 `_estack` 在 RAM 末尾（如 STM32F103C8T6 的 `0x20005000`，**STM32CubeMX生成的CMake项目中的ld文件会出现这个bug**），则越界读触发 BusFault。
 
 **修复**：用纯汇编函数实现跳转，`MSR msp, r0` 后直接 `BX r1`，中间没有任何栈操作：
 
