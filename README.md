@@ -67,7 +67,3 @@ python bootloader_uploader.py
 - 分包大小：256 字节
 - 分包间隔：100ms
 - 默认波特率：115200
-
-## 许可证
-
-Apache License 2.0
